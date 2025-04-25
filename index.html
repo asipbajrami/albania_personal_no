@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Albanian NID Decoder</title>
+
+<!-- Google font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+ :root{
+   --accent: #B1002C;           /* red from the Albanian flag  */
+   --bg-grad: radial-gradient(ellipse at top,#c5062e 0%,#8f001b 100%);
+   --card-bg:#fff;
+   --text:#222;
+ }
+ *{box-sizing:border-box;margin:0}
+ body{
+   font-family:'Poppins',sans-serif;
+   min-height:100vh;
+   display:flex;
+   align-items:center;
+   justify-content:center;
+   background:var(--bg-grad);
+   color:var(--text);
+   padding:1rem;
+ }
+ .card{
+   background:var(--card-bg);
+   width:100%;
+   max-width:420px;
+   padding:2rem 2.5rem 2.2rem;
+   border-radius:16px;
+   box-shadow:0 22px 45px rgba(0,0,0,.25);
+   animation:float .8s cubic-bezier(.4,.8,.2,1) both;
+ }
+ @keyframes float{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+ h1{
+   font-size:1.4rem;
+   margin-bottom:1.2rem;
+   color:var(--accent);
+   text-align:center
+ }
+ .field{
+   position:relative;
+   margin-bottom:1.4rem;
+ }
+ input{
+   width:100%;
+   font-size:1rem;
+   padding:.8rem 1rem;
+   border:2px solid #ddd;
+   border-radius:10px;
+   outline:0;
+   transition:border .25s;
+   letter-spacing:.05rem;
+ }
+ input:focus{border-color:var(--accent)}
+ button{
+   position:absolute;
+   right:.4rem; top:.4rem; bottom:.4rem;
+   border:none;
+   background:var(--accent);
+   color:#fff;
+   font-weight:600;
+   padding:0 .9rem;
+   border-radius:8px;
+   cursor:pointer;
+   transition:background .2s;
+ }
+ button:hover{background:#8f001b}
+ #result{opacity:0;transition:opacity .3s}
+ #result.show{opacity:1}
+ #result div{margin:.25rem 0;font-weight:600}
+ .error{color:#c00}
+ .footer{
+   margin-top:1.6rem;
+   font-size:.75rem;
+   text-align:center;
+   color:#666;
+ }
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>Albanian Personal&nbsp;Number&nbsp;Decoder</h1>
+
+  <div class="field">
+    <input id="nid" maxlength="10" placeholder="Type 10-char NID…"
+           onkeydown="if(event.key==='Enter')decode()">
+    <button onclick="decode()">Decode</button>
+  </div>
+
+  <div id="result">
+    <div>Birthday: <span id="dob">—</span></div>
+    <div>Gender&nbsp;&nbsp;: <span id="sex">—</span></div>
+  </div>
+
+  <div class="footer">Based on Council-of-Ministers decision No. 827&nbsp;(2003)</div>
+</main>
+
+<script>
+function decode(){
+  const nid = document.getElementById('nid').value.trim().toUpperCase();
+  const res = document.getElementById('result');
+  const dob = document.getElementById('dob');
+  const sex = document.getElementById('sex');
+
+  // hide previous state
+  res.classList.remove('show');
+  dob.textContent = sex.textContent = '—';
+  dob.classList.remove('error');
+
+  // rough pattern check
+  if(!/^[0-9A-TV][0-9]\d{2}\d{2}.{3}[A-W]?$/.test(nid)){
+      dob.textContent = 'invalid number';
+      dob.classList.add('error');
+      return;
+  }
+
+  // --- decode year ---
+  const decade = nid[0];
+  const yearDigit = +nid[1];
+  const decadeMap = {
+    '0':1800,'1':1810,'2':1820,'3':1830,'4':1840,'5':1850,
+    '6':1860,'7':1870,'8':1880,'9':1890,
+    'A':1900,'B':1910,'C':1920,'D':1930,'E':1940,'F':1950,
+    'G':1960,'H':1970,'I':1980,'J':1990,
+    'K':2000,'L':2010,'M':2020,'N':2030,'O':2040,'P':2050,
+    'Q':2060,'R':2070,'S':2080,'T':2090
+  };
+  const year = decadeMap[decade] + yearDigit;
+
+  // --- month / day / gender ---
+  let month = +nid.substr(2,2);
+  const day  = +nid.substr(4,2);
+  const female = month > 50;
+  if(female) month -= 50;
+
+  // final formatting
+  const nice = n=>String(n).padStart(2,'0');
+  dob.textContent = `${nice(day)}.${nice(month)}.${year}`;
+  sex.textContent = female ? 'Female' : 'Male';
+
+  res.classList.add('show');
+}
+</script>
+</body>
+</html>
